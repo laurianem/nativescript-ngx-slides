@@ -71,6 +71,9 @@ export class SlidesComponent implements OnInit {
 	indicators: IIndicators[];
 	currentSlide: ISlideMap;
 	_slideMap: ISlideMap[];
+	// whether orientation should auto adjust or user
+	// if `footerMarginTop` is used, then user must manually adjust on orientation change
+	_usingManualFooterMargin: boolean;
 
 	currentScale = 1;
 	currentDeltaX = 0;
@@ -93,7 +96,11 @@ export class SlidesComponent implements OnInit {
 		this.pageIndicators = this.pageIndicators ? this.pageIndicators : false;
 		this.pageWidth = this.pageWidth ? this.pageWidth : platform.screen.mainScreen.widthDIPs;
 		this.pageHeight = this.pageHeight ? this.pageHeight : platform.screen.mainScreen.heightDIPs;
-		this.footerMarginTop = this.footerMarginTop ? this.footerMarginTop : this.calculateFoorterMarginTop(this.pageHeight);
+		if (this.footerMarginTop) {
+			this._usingManualFooterMargin = true;
+		} else {
+			this.footerMarginTop = this.calculateFooterMarginTop(this.pageHeight);
+		}
 		// handle orientation change
 		app.on(app.orientationChangedEvent, this.onOrientationChanged, this);
 	}
@@ -142,7 +149,10 @@ export class SlidesComponent implements OnInit {
 				this.pageHeight = platform.screen.mainScreen.heightDIPs;
 			}
 
-			this.footerMarginTop = this.calculateFoorterMarginTop(this.pageHeight);
+			if (!this._usingManualFooterMargin) {
+				// if user did not manually set a footer margin, auto adjust based on page height
+				this.footerMarginTop = this.calculateFooterMarginTop(this.pageHeight);
+			}
 
 			// loop through slides and setup height and widith
 			this.slides.forEach((slide: SlideComponent) => {
@@ -188,7 +198,7 @@ export class SlidesComponent implements OnInit {
 	//
 
 	// position footer
-	private calculateFoorterMarginTop(pageHeight: number): number {
+	private calculateFooterMarginTop(pageHeight: number): number {
 		return pageHeight - (pageHeight / 6);
 	}
 
